@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import re
 import requests
@@ -11,8 +12,9 @@ TOGGLE_ACTIVITY_TAGS = {'EDU': 38, 'SEO': 17, 'MEETING': 16, 'DOC': 15, 'STUDY':
 
 
 class Toggle:
-    def __init__(self, issue, duration, activity=TOGGLE_ACTIVITY_TAGS.get('CODE'), date=None, start=None, end=None,
-                 description=None):
+    def __init__(self, entry_id, issue, duration, activity=TOGGLE_ACTIVITY_TAGS.get('CODE'), date=None, start=None,
+                 end=None, description=None):
+        self.entry_id = entry_id
         self.issue = issue
         self.duration = duration
         self.activity = activity
@@ -22,7 +24,24 @@ class Toggle:
         self.description = description
 
     def __str__(self):
-        return '#' + str(self.issue) + ' - ' + self.description
+        return str(self.entry_id) + ' #' + str(self.issue) + ' - ' + self.description
+
+    @classmethod
+    def get_entry(cls, entry_id):
+        return requests.get(TOGGLE_API_URL + '/' + str(entry_id), auth=TOGGLE_AUTH)
+
+    def add_tag(self, tag='PM'):
+        response = Toggle.get_entry(self.entry_id)
+        entry = response.json()
+        tags = entry.get('data').get('tags', [])
+        if tag in tags:
+            return False
+
+        tags.append(tag)
+        request = {'time_entry': {'tags': tags}}
+        request = json.dumps(request)
+        t_response = requests.put(TOGGLE_API_URL + '/' + str(self.entry_id), data=request, auth=TOGGLE_AUTH)
+        return t_response.status_code == 200
 
     @classmethod
     def create_toggles(cls, start_date=None, end_date=None):
@@ -44,13 +63,15 @@ class Toggle:
         times_json = response.json()
         entries = []
         for time in times_json:
+            entry_id = time.get('id')
+            description = time.get('description')
             activity = TOGGLE_ACTIVITY_TAGS.get('CODE')
             tags = time.get('tags')
             if tags:
                 if 'PM' in tags:
                     continue
                 elif 'No - PM' in tags:
-                    print('Skipping entry (NO - PM):', time)
+                    print('Skipping entry (NO - PM):', entry_id, description)
                     continue
                 else:
                     if len(tags) == 1:
@@ -58,20 +79,19 @@ class Toggle:
                             activity = TOGGLE_ACTIVITY_TAGS.get(tags[0])
                         except KeyError:
                             print('Undefined tag', tags[0])
-                            print('Skipping entry (' + tags[0] + '):', time)
+                            print('Skipping entry (' + tags[0] + '):', entry_id, description)
                             continue
                     else:
                         print('More than one tag provided:', tags)
-                        print('Skipping entry', tags, ':', time)
+                        print('Skipping entry', tags, ':', entry_id, description)
                         continue
 
-            description = time.get('description')
             issue_description = re.search('#(?P<issue>\d+) *- *(?P<description>.*)', description)
             if issue_description:
                 issue = issue_description.group('issue')
                 description = issue_description.group('description')
             else:
-                print('Skipping entry (ISSUE):', time)
+                print('Skipping entry (ISSUE):', entry_id, description)
                 continue
 
             start = parser.parse(time.get('start')).astimezone(tz=tz.tzstr('UTC+03:30'))
@@ -87,7 +107,7 @@ class Toggle:
             duration = "%d:%02d" % (h, m)
 
             entries.append(
-                    Toggle(issue, duration, activity=activity, date=date, start=start, end=end,
+                    Toggle(entry_id, issue, duration, activity=activity, date=date, start=start, end=end,
                            description=description))
 
         return entries
