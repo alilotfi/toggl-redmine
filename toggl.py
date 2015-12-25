@@ -4,13 +4,15 @@ import re
 import requests
 from dateutil import parser, tz
 
-TOGGL_API_URL = 'https://www.toggl.com/api/v8/time_entries'
-TOGGL_AUTH = ('668ef91140905aa11b361b9c473967c0', 'api_token')
-ACTIVITY_CODE = 9
+TOGGLE_API_URL = 'https://www.toggl.com/api/v8/time_entries'
+TOGGLE_AUTH = ('668ef91140905aa11b361b9c473967c0', 'api_token')
+TOGGLE_ACTIVITY_TAGS = {'EDU': 38, 'SEO': 17, 'MEETING': 16, 'DOC': 15, 'STUDY': 14, 'PROJECT MANAGEMENT': 13,
+                        'TEST': 12, 'BOOT STRAP': 11, 'NEED': 10, 'CODE': 9, 'DESIGN': 8}
 
 
 class Toggle:
-    def __init__(self, issue, duration, activity=ACTIVITY_CODE, date=None, start=None, end=None, description=None):
+    def __init__(self, issue, duration, activity=TOGGLE_ACTIVITY_TAGS.get('CODE'), date=None, start=None, end=None,
+                 description=None):
         self.issue = issue
         self.duration = duration
         self.activity = activity
@@ -29,20 +31,34 @@ class Toggle:
         if not start_date:
             start_date = end_date - datetime.timedelta(days=30)
 
-        response = requests.get(TOGGL_API_URL,
+        response = requests.get(TOGGLE_API_URL,
                                 params={'start_date': start_date.strftime('%Y-%m-%dT%H:%M:%S+03:30'),
                                         'end_date': end_date.strftime('%Y-%m-%dT%H:%M:%S+03:30')},
-                                auth=TOGGL_AUTH)
+                                auth=TOGGLE_AUTH)
 
         times_json = response.json()
         entries = []
         for time in times_json:
-            if time.get('tags'):
-                if 'PM' in time.get('tags'):
+            tags = time.get('tags')
+            if tags:
+                if 'PM' in tags:
                     continue
-                elif 'No - PM' in time.get('tags'):
+                elif 'No - PM' in tags:
                     print('Skipping entry (NO - PM):', time)
                     continue
+                else:
+                    activity = TOGGLE_ACTIVITY_TAGS.get('CODE')
+                    if len(tags) == 1:
+                        try:
+                            activity = TOGGLE_ACTIVITY_TAGS.get(tags[0])
+                        except KeyError:
+                            print('Undefined tag', tags[0])
+                            print('Skipping entry (' + tags[0] + '):', time)
+                            continue
+                    else:
+                        print('More than one tag provided:', tags)
+                        print('Skipping entry', tags, ':', time)
+                        continue
 
             description = time.get('description')
             issue_description = re.search('#(?P<issue>\d+) *- *(?P<description>.*)', description)
@@ -65,7 +81,10 @@ class Toggle:
             h, m = divmod(m, 60)
             duration = "%d:%02d" % (h, m)
 
-            entries.append(Toggle(issue, duration, date=date, start=start, end=end, description=description))
+            # noinspection PyUnboundLocalVariable
+            entries.append(
+                    Toggle(issue, duration, activity=activity, date=date, start=start, end=end,
+                           description=description))
 
         return entries
 
