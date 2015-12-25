@@ -39,6 +39,7 @@ class Toggle:
         times_json = response.json()
         entries = []
         for time in times_json:
+            activity = TOGGLE_ACTIVITY_TAGS.get('CODE')
             tags = time.get('tags')
             if tags:
                 if 'PM' in tags:
@@ -47,7 +48,6 @@ class Toggle:
                     print('Skipping entry (NO - PM):', time)
                     continue
                 else:
-                    activity = TOGGLE_ACTIVITY_TAGS.get('CODE')
                     if len(tags) == 1:
                         try:
                             activity = TOGGLE_ACTIVITY_TAGS.get(tags[0])
@@ -69,11 +69,11 @@ class Toggle:
                 print('Skipping entry (ISSUE):', time)
                 continue
 
-            start = parser.parse(time.get('start'))
+            start = parser.parse(time.get('start')).astimezone(tz=tz.tzstr('UTC+03:30'))
             date = start.date().strftime('%Y-%m-%d')
             start = start.time().strftime('%H:%M')
 
-            end = parser.parse(time.get('stop'))
+            end = parser.parse(time.get('stop')).astimezone(tz=tz.tzstr('UTC+03:30'))
             end = end.time().strftime('%H:%M')
 
             duration = int(time.get('duration'))
@@ -81,15 +81,8 @@ class Toggle:
             h, m = divmod(m, 60)
             duration = "%d:%02d" % (h, m)
 
-            # noinspection PyUnboundLocalVariable
             entries.append(
                     Toggle(issue, duration, activity=activity, date=date, start=start, end=end,
                            description=description))
 
         return entries
-
-
-items = Toggle.create_toggles()
-print('--- FETCH DONE ---')
-for i in items:
-    print(str(i))

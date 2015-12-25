@@ -1,0 +1,27 @@
+{
+  "time_entry": {
+    "issue_id": "",
+    "activity_id": "",
+    "hours": "",
+    "comments": "",
+    "spent_on": "",
+    "custom_fields": [
+      {
+        "id": 1,
+        "value": ""
+      },
+      {
+        "id": 2,
+        "value": ""
+      },
+      {
+        "id": 3,
+        "value": "شرکت"
+      },
+      {
+        "id": 6,
+        "value": 0
+      }
+    ]
+  }
+}
