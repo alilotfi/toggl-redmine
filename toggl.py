@@ -31,6 +31,11 @@ class Toggle:
         if not start_date:
             start_date = end_date - datetime.timedelta(days=30)
 
+        if start_date is str:
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        if end_date is str:
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+
         response = requests.get(TOGGLE_API_URL,
                                 params={'start_date': start_date.strftime('%Y-%m-%dT%H:%M:%S+03:30'),
                                         'end_date': end_date.strftime('%Y-%m-%dT%H:%M:%S+03:30')},
