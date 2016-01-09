@@ -108,7 +108,12 @@ class Toggle:
             date = start.date().strftime('%Y-%m-%d')
             start = start.time().strftime('%H:%M')
 
-            end = parser.parse(time.get('stop')).astimezone(tz=tz.tzstr('UTC+03:30'))  # TODO: Breaks on running entry
+            stop_time = time.get('stop')
+            if not stop_time:
+                report('Skipping entry (already running): ' + str(entry_id) + ' ' + description, Color.WARNING)
+                continue
+
+            end = parser.parse(stop_time).astimezone(tz=tz.tzstr('UTC+03:30'))
             end = end.time().strftime('%H:%M')
 
             duration = int(time.get('duration'))
