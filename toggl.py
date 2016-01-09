@@ -70,7 +70,8 @@ class Toggle:
             description = time.get('description')
             activity = TOGGLE_ACTIVITY_TAGS.get('CODE')
             tags = time.get('tags')
-
+            remote = False
+            
             if tags:
                 if 'PM' in tags:
                     continue
@@ -78,7 +79,6 @@ class Toggle:
                     report('Skipping entry (NO - PM):' + entry_id + description, Color.WARNING)
                     continue
 
-                remote = False
                 if TOGGLE_REMOTE_TAG in tags:
                     remote = True
                     tags.remove(TOGGLE_REMOTE_TAG)
