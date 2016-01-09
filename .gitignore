@@ -2,3 +2,4 @@ venv/
 *.iim
 .idea/
 *.pyc
+api.conf

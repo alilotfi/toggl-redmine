@@ -3,11 +3,13 @@ import json
 
 import re
 import requests
+from config import get_toggl_key
 from dateutil import parser, tz
 from reporter import report, Color
 
 TOGGLE_API_URL = 'https://www.toggl.com/api/v8/time_entries'
-TOGGLE_AUTH = ('668ef91140905aa11b361b9c473967c0', 'api_token')
+
+TOGGLE_AUTH = (get_toggl_key(), 'api_token')
 TOGGLE_ACTIVITY_TAGS = {'EDU': 38, 'SEO': 17, 'MEETING': 16, 'DOC': 15, 'STUDY': 14, 'PROJECT MANAGEMENT': 13,
                         'TEST': 12, 'BOOT STRAP': 11, 'NEED': 10, 'CODE': 9, 'DESIGN': 8}
 TOGGLE_REMOTE_TAG = 'Remote'
@@ -71,7 +73,7 @@ class Toggle:
             activity = TOGGLE_ACTIVITY_TAGS.get('CODE')
             tags = time.get('tags')
             remote = False
-            
+
             if tags:
                 if 'PM' in tags:
                     continue

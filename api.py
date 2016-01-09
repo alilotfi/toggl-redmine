@@ -3,13 +3,15 @@ import sys
 
 import copy
 import requests
+from config import get_redmine_key
 from reporter import report, Color
 from toggl import Toggle
 
 JSON_TEMPLATE_PATH = 'entry_template.json'
 API_URL = 'http://pm.arsh.co/time_entries.xml'
+
 JSON_HEADERS = {'Content-type': 'application/json',
-                'X-Redmine-API-Key': '71552af7e0259ea8e939f0704065ec09c6587776'}
+                'X-Redmine-API-Key': get_redmine_key()}
 LOCATIONS = {'office': 'شرکت', 'remote': 'دورکاری'}
 
 
