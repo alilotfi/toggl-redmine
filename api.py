@@ -25,25 +25,42 @@ def render_json(toggle, template):
     return template
 
 
+def report(status, color=None, end_line=False):
+    string = '%s'
+    if color == 'green':
+        string = '\033[92m' + string + '\033[0'
+    elif color == 'red':
+        string = '\033[91m' + string + '\033[0'
+    elif color == 'blue':
+        string = '\033[94m' + string + '\033[0'
+
+    if end_line:
+        string += '\n'
+
+    sys.stdout.write(string % status)
+    sys.stdout.flush()
+
+
 def submit_entries(start_date=None, end_date=None):
     json_template = open(JSON_TEMPLATE_PATH)
     json_template = json.loads(json_template.read())
 
-    print('Fetching time entries from toggl.com')
+    report('Fetching time entries from toggl.com', 'blue', True)
     toggles = Toggle.create_toggles(start_date, end_date)
-    print('Submitting', str(len(toggles)), 'entries to Arsh pm.')
+    report('Submitting' + str(len(toggles)) + 'entries to Arsh pm.', 'blue', True)
     for toggle in toggles:
-        print(toggle.entry_id, '@', toggle)
-        print('Preparing for submit.', end=' ')
+        report(str(toggle) + ' - ')
+        report('Preparing for submit. ')
         data = render_json(toggle, json_template)
         response = requests.post(API_URL, data=json.dumps(data), headers=JSON_HEADERS)
         if not response.status_code == 201:
-            print('Submission failed. Reason:', response.reason)
+            report('Submission failed. Reason: %s' % response.reason, 'red', True)
+            sys.stdout.flush()
             continue
 
-        print('Submission succeeded.', end=' ')
+        report('Submission succeeded. ', 'green')
         toggle.add_tag()
-        print('Tagged.')
+        report('Tagged.', 'green', True)
 
 
 start = None
