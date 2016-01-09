@@ -9,7 +9,7 @@ JSON_TEMPLATE_PATH = 'entry_template.json'
 API_URL = 'http://pm.arsh.co/time_entries.xml'
 JSON_HEADERS = {'Content-type': 'application/json',
                 'X-Redmine-API-Key': '71552af7e0259ea8e939f0704065ec09c6587776'}
-
+LOCATIONS = {'office': 'شرکت', 'remote': 'دورکاری'}
 
 def render_json(toggle, template):
     template = copy.deepcopy(template)
@@ -22,6 +22,12 @@ def render_json(toggle, template):
     fields = entry.get('custom_fields')
     fields[0]['value'] = toggle.start
     fields[1]['value'] = toggle.end
+    if toggle.remote:
+        fields[2]['value'] = LOCATIONS.get('remote')
+        fields[3]['value'] = 1
+    else:
+        fields[2]['value'] = LOCATIONS.get('office')
+        fields[3]['value'] = 0
     return template
 
 

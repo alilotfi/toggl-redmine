@@ -9,11 +9,12 @@ TOGGLE_API_URL = 'https://www.toggl.com/api/v8/time_entries'
 TOGGLE_AUTH = ('668ef91140905aa11b361b9c473967c0', 'api_token')
 TOGGLE_ACTIVITY_TAGS = {'EDU': 38, 'SEO': 17, 'MEETING': 16, 'DOC': 15, 'STUDY': 14, 'PROJECT MANAGEMENT': 13,
                         'TEST': 12, 'BOOT STRAP': 11, 'NEED': 10, 'CODE': 9, 'DESIGN': 8}
+TOGGLE_REMOTE_TAG = 'Remote'
 
 
 class Toggle:
     def __init__(self, entry_id, issue, duration, activity=TOGGLE_ACTIVITY_TAGS.get('CODE'), date=None, start=None,
-                 end=None, description=None):
+                 end=None, description=None, remote=False):
         self.entry_id = entry_id
         self.issue = issue
         self.duration = duration
@@ -22,6 +23,7 @@ class Toggle:
         self.start = start
         self.end = end
         self.description = description
+        self.remote = remote
 
     def __str__(self):
         return str(self.entry_id) + ' #' + str(self.issue) + ' - ' + self.description
@@ -67,23 +69,28 @@ class Toggle:
             description = time.get('description')
             activity = TOGGLE_ACTIVITY_TAGS.get('CODE')
             tags = time.get('tags')
+
             if tags:
                 if 'PM' in tags:
                     continue
                 elif 'No - PM' in tags:
                     print('Skipping entry (NO - PM):', entry_id, description)
                     continue
-                else:
-                    if len(tags) == 1:
-                        try:
-                            activity = TOGGLE_ACTIVITY_TAGS.get(tags[0])
-                        except KeyError:
-                            print('Undefined tag', tags[0])
-                            print('Skipping entry (' + tags[0] + '):', entry_id, description)
-                            continue
-                    else:
-                        print('More than one tag provided:', tags)
-                        print('Skipping entry', tags, ':', entry_id, description)
+
+                remote = False
+                if TOGGLE_REMOTE_TAG in tags:
+                            remote = True
+                            tags.remove(TOGGLE_REMOTE_TAG)
+
+                if len(tags) > 1:
+                    print('More than one tag provided:', tags)
+                    print('Skipping entry', tags, ':', entry_id, description)
+                    continue
+                elif len(tags) == 1:
+                    activity = TOGGLE_ACTIVITY_TAGS.get(tags[0])
+                    if not activity:
+                        print('Undefined tag', tags[0])
+                        print('Skipping entry (' + tags[0] + '):', entry_id, description)
                         continue
 
             issue_description = re.search('#(?P<issue>\d+) *- *(?P<description>.*)', description)
@@ -98,7 +105,7 @@ class Toggle:
             date = start.date().strftime('%Y-%m-%d')
             start = start.time().strftime('%H:%M')
 
-            end = parser.parse(time.get('stop')).astimezone(tz=tz.tzstr('UTC+03:30'))
+            end = parser.parse(time.get('stop')).astimezone(tz=tz.tzstr('UTC+03:30'))  # TODO: Breaks on running entry
             end = end.time().strftime('%H:%M')
 
             duration = int(time.get('duration'))
@@ -108,6 +115,6 @@ class Toggle:
 
             entries.append(
                     Toggle(entry_id, issue, duration, activity=activity, date=date, start=start, end=end,
-                           description=description))
+                           description=description, remote=remote))
 
         return entries
