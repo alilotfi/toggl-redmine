@@ -41,7 +41,7 @@ def submit_entries(start_date=None, end_date=None):
 
     report('Fetching time entries from toggl.com', Color.INFO)
     toggles = Toggle.create_toggles(start_date, end_date)
-    report('Submitting' + str(len(toggles)) + 'entries to Arsh pm.', Color.INFO)
+    report('Submitting' + ' ' + str(len(toggles)) + ' ' + 'entries to Arsh pm.', Color.INFO)
     for toggle in toggles:
         report(str(toggle), Color.HEADER, ' ')
         report('- Preparing...', end=' ')

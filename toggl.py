@@ -78,7 +78,7 @@ class Toggle:
                 if 'PM' in tags:
                     continue
                 elif 'No - PM' in tags:
-                    report('Skipping entry (NO - PM):' + entry_id + description, Color.WARNING)
+                    report('Skipping entry ("NO - PM" tag): ' + str(entry_id) + description, Color.WARNING)
                     continue
 
                 if TOGGLE_REMOTE_TAG in tags:
@@ -87,13 +87,13 @@ class Toggle:
 
                 if len(tags) > 1:
                     report('More than one tag provided: ' + tags, Color.WARNING)
-                    report('Skipping entry ' + tags + ':' + entry_id + ' ' + description, Color.WARNING)
+                    report('Skipping entry ' + tags + ':' + str(entry_id) + ' ' + description, Color.WARNING)
                     continue
                 elif len(tags) == 1:
                     activity = TOGGLE_ACTIVITY_TAGS.get(tags[0])
                     if not activity:
                         report('Undefined tag ' + tags[0], Color.WARNING)
-                        report('Skipping entry (' + tags[0] + '): ' + entry_id + ' ' + description, Color.WARNING)
+                        report('Skipping entry (' + tags[0] + '): ' + str(entry_id) + ' ' + description, Color.WARNING)
                         continue
 
             issue_description = re.search('#(?P<issue>\d+) *- *(?P<description>.*)', description)
@@ -101,7 +101,7 @@ class Toggle:
                 issue = issue_description.group('issue')
                 description = issue_description.group('description')
             else:
-                report('Skipping entry (ISSUE): ' + entry_id + ' ' + description, Color.WARNING)
+                report('Skipping entry (issue id not found): ' + str(entry_id) + ' ' + description, Color.WARNING)
                 continue
 
             start = parser.parse(time.get('start')).astimezone(tz=tz.tzstr('UTC+03:30'))
