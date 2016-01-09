@@ -4,6 +4,7 @@ import json
 import re
 import requests
 from dateutil import parser, tz
+from reporter import report, Color
 
 TOGGLE_API_URL = 'https://www.toggl.com/api/v8/time_entries'
 TOGGLE_AUTH = ('668ef91140905aa11b361b9c473967c0', 'api_token')
@@ -74,23 +75,23 @@ class Toggle:
                 if 'PM' in tags:
                     continue
                 elif 'No - PM' in tags:
-                    print('Skipping entry (NO - PM):', entry_id, description)
+                    report('Skipping entry (NO - PM):' + entry_id + description, Color.WARNING)
                     continue
 
                 remote = False
                 if TOGGLE_REMOTE_TAG in tags:
-                            remote = True
-                            tags.remove(TOGGLE_REMOTE_TAG)
+                    remote = True
+                    tags.remove(TOGGLE_REMOTE_TAG)
 
                 if len(tags) > 1:
-                    print('More than one tag provided:', tags)
-                    print('Skipping entry', tags, ':', entry_id, description)
+                    report('More than one tag provided: ' + tags, Color.WARNING)
+                    report('Skipping entry ' + tags + ':' + entry_id + ' ' + description, Color.WARNING)
                     continue
                 elif len(tags) == 1:
                     activity = TOGGLE_ACTIVITY_TAGS.get(tags[0])
                     if not activity:
-                        print('Undefined tag', tags[0])
-                        print('Skipping entry (' + tags[0] + '):', entry_id, description)
+                        report('Undefined tag ' + tags[0], Color.WARNING)
+                        report('Skipping entry (' + tags[0] + '): ' + entry_id + ' ' + description, Color.WARNING)
                         continue
 
             issue_description = re.search('#(?P<issue>\d+) *- *(?P<description>.*)', description)
@@ -98,7 +99,7 @@ class Toggle:
                 issue = issue_description.group('issue')
                 description = issue_description.group('description')
             else:
-                print('Skipping entry (ISSUE):', entry_id, description)
+                report('Skipping entry (ISSUE): ' + entry_id + ' ' + description, Color.WARNING)
                 continue
 
             start = parser.parse(time.get('start')).astimezone(tz=tz.tzstr('UTC+03:30'))

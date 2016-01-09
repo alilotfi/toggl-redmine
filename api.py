@@ -3,6 +3,7 @@ import sys
 
 import copy
 import requests
+from reporter import report, Color
 from toggl import Toggle
 
 JSON_TEMPLATE_PATH = 'entry_template.json'
@@ -10,6 +11,7 @@ API_URL = 'http://pm.arsh.co/time_entries.xml'
 JSON_HEADERS = {'Content-type': 'application/json',
                 'X-Redmine-API-Key': '71552af7e0259ea8e939f0704065ec09c6587776'}
 LOCATIONS = {'office': 'شرکت', 'remote': 'دورکاری'}
+
 
 def render_json(toggle, template):
     template = copy.deepcopy(template)
@@ -31,42 +33,25 @@ def render_json(toggle, template):
     return template
 
 
-def report(status, color=None, end_line=False):
-    string = '%s'
-    if color == 'green':
-        string = '\033[92m' + string + '\033[0'
-    elif color == 'red':
-        string = '\033[91m' + string + '\033[0'
-    elif color == 'blue':
-        string = '\033[94m' + string + '\033[0'
-
-    if end_line:
-        string += '\n'
-
-    sys.stdout.write(string % status)
-    sys.stdout.flush()
-
-
 def submit_entries(start_date=None, end_date=None):
     json_template = open(JSON_TEMPLATE_PATH)
     json_template = json.loads(json_template.read())
 
-    report('Fetching time entries from toggl.com', 'blue', True)
+    report('Fetching time entries from toggl.com', Color.INFO)
     toggles = Toggle.create_toggles(start_date, end_date)
-    report('Submitting' + str(len(toggles)) + 'entries to Arsh pm.', 'blue', True)
+    report('Submitting' + str(len(toggles)) + 'entries to Arsh pm.', Color.INFO)
     for toggle in toggles:
-        report(str(toggle) + ' - ')
-        report('Preparing for submit. ')
+        report(str(toggle), Color.HEADER, ' ')
+        report('- Preparing...', end=' ')
         data = render_json(toggle, json_template)
         response = requests.post(API_URL, data=json.dumps(data), headers=JSON_HEADERS)
         if not response.status_code == 201:
-            report('Submission failed. Reason: %s' % response.reason, 'red', True)
-            sys.stdout.flush()
+            report('Submission failed. Reason: %s' % response.reason, Color.FAILURE)
             continue
 
-        report('Submission succeeded. ', 'green')
+        report('Submitted', Color.SUCCESS, ' ')
         toggle.add_tag()
-        report('Tagged.', 'green', True)
+        report('Tagged.', Color.SUCCESS)
 
 
 start = None
