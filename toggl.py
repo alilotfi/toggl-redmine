@@ -78,7 +78,7 @@ class Toggle:
                 if 'PM' in tags:
                     continue
                 elif 'No - PM' in tags:
-                    report('Skipping entry ("NO - PM" tag): ' + str(entry_id) + description, Color.WARNING)
+                    report('Skipping entry ("NO - PM" tag): ' + str(entry_id) + ' ' + description, Color.WARNING)
                     continue
 
                 if TOGGLE_REMOTE_TAG in tags:
