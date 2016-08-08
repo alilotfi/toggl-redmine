@@ -3,3 +3,4 @@ venv/
 .idea/
 *.pyc
 api.conf
+__pycache__/
